@@ -1,0 +1,139 @@
+---
+title: 'Third post'
+description: 'Lorem ipsum dolor sit amet'
+pubDate: 'Jul 22 2022'
+---
+
+## Description
+
+Here are the steps for samba server installation with anonymous access and enabled Linux security context.
+
+### Environment
+
+
+AlmaLinux 10.
+
+### Installation
+
+run the commands below one by one, also check the absence of errors in console
+```sh
+# Updates each package to the latest version that is both available and resolvable.
+sudo dnf upgrade -y 
+sudo dnf install samba samba-common
+# enabling samba server and netbios 
+sudo systemctl enable smb nmb
+
+# enabling staring server and netbios 
+sudo systemctl start smb nmb
+```
+
+### permit samba traffic
+
+```sh
+    sudo firewall-cmd --permanent --zone=public --add-service=samba
+    sudo firewall-cmd --reload
+```
+
+### User configuration 
+
+For ease access a dedicated use group is created `smbsharegrp`,  to this group anonymous user will be added.
+Or maybe added different users to obtain ro access to directories with different owners.
+
+```sh
+# creating special group for samba users
+groupadd smbsharegrp
+```
+
+Add `nobody` required users to  `smbsharegrp`
+```sh
+sudo usermod -aG smbsharegrp nobody
+sudo usermod -aG smbsharegrp <some-user>
+```
+
+To permit guest access adding a user(-a) to samba server without password (-n)
+
+```sh
+sudo smbpasswd -a -n nobody
+```
+
+
+At the same time `nobody` is locked on the host
+```sh
+sudo passwd -S nobody
+# nobody L 2025-06-05 0 99999 7 -1
+# L - locked
+```
+
+### Samba Sever Configuration 
+Commands to check config validation
+```sh
+# testparm check config is valid
+testparm /etc/samba/smb.conf
+
+#without prompt
+testparm -s /etc/samba/smb.conf
+```
+
+change MY_WORK_GROUP to the required workgroup
+specify guest account `guest account = nobody` and map users with bad password to guest `map to guest = Bad Password`
+and permit guest access `usershare allow guests = yes`
+
+
+edit `/etc/samba/smb.conf` and check that values are configured 
+
+```
+    workgroup = MY_WORK_GROUP
+    security = user
+
+    passdb backend = tdbsam
+    guest account = nobody
+    map to guest = Bad Password
+
+    printing = cups
+    printcap name = cups
+    load printers = yes
+    cups options = raw
+    usershare allow guests = yes
+
+```
+
+Example how to add share with name:`myshare`.
+```
+[myshare]
+        path = /tmp/share
+        guest ok = yes
+        read only = yes
+```
+
+then save and check with `testparm -s /etc/samba/smb.conf`
+
+
+### Security Configuration 
+
+Temporary disable linux security to check samba access
+
+```sh
+sudo setenforce 0
+```
+after disabling, shared directories should be available.
+
+
+change file security context for directory 
+```sh
+chcon -t samba_share_t /tmp/share" 
+```
+`samba_share_t` is added by selinux-policy
+
+
+Maps directory and sub dirs to a samba_share_t
+```sh
+semanage fcontext -a -t samba_share_t "/tmp/share(/.*)?"
+```
+
+
+It changes the SELinux context of the specified path to samba_share_t. 
+This would be necessary if you have SELinux in enforcing mode on your system and the
+path being referred to was not previously designated as a Samba share (via SELinux labeling).
+```sh
+sudo restorecon -Rv /tmp/share
+```

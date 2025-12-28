@@ -1,0 +1,20 @@
+{
+  "name": "Document Static renderer",
+  "build": {
+    "dockerfile": "../docker/Dockerfile",
+    "context": ".."
+  },
+  "runArgs": [
+    "-p=192.168.1.11:4000:4000"
+  ],
+  "forwardPorts": [4000],
+  "postCreateCommand": "npm install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode-remote.remote-containers",
+        "streetsidesoftware.code-spell-checker"
+      ]
+    }
+  }
+}

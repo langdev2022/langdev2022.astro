@@ -137,3 +137,10 @@ path being referred to was not previously designated as a Samba share (via SELin
 ```sh
 sudo restorecon -Rv /tmp/share
 ```
+
+enable back security 
+```sh
+sudo setenforce 1
+```
+
+Check access to share, if everything is configured correctly then directories will be accessible

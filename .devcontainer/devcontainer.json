@@ -1,9 +1,6 @@
 {
   "name": "Document Static renderer",
-  "build": {
-    "dockerfile": "../docker/Dockerfile",
-    "context": ".."
-  },
+  "image": "node:lts-alpine",
   "runArgs": [
     "-p=192.168.1.11:4000:4000"
   ],

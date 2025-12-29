@@ -138,6 +138,14 @@ path being referred to was not previously designated as a Samba share (via SELin
 sudo restorecon -Rv /tmp/share
 ```
 
+to check that attributes were set correctly set
+
+```
+ls -laZ
+
+# drwxrwxr-x.  5 <user_owner> smbsharegrp unconfined_u:object_r:samba_share_t:s0  4096 Jul  7 18:20 <dir_name>
+```
+
 enable back security 
 ```sh
 sudo setenforce 1
